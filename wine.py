@@ -1,8 +1,10 @@
+from sys import argv
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from torch.utils.data import DataLoader, TensorDataset, random_split
+from os.path import exists
 
 wine_df = pd.read_csv("winequality-red.csv", sep=";")
 
@@ -15,10 +17,6 @@ y = y.reshape(1599, 1)
 inputs = torch.from_numpy(x).type(torch.float)
 target = torch.from_numpy(y).type(torch.float)
 
-dataset = TensorDataset(inputs, target)
-
-train_ds, val_ds = random_split(dataset, [1300, 299])
-
 class WineModel(torch.nn.Module):
     def __init__(self, input, output):
         super().__init__()
@@ -29,10 +27,10 @@ class WineModel(torch.nn.Module):
         return out
 
 model = WineModel(11,1)
-epochs = 500
+epochs = 1000
 
 loss_fn = torch.nn.MSELoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.05)
 
 def train(epochs, input, label, optimizer, loss):
     for epoch in range(epochs):
@@ -45,3 +43,9 @@ def train(epochs, input, label, optimizer, loss):
         print(f'epoch {epoch}, loss {loss.item()}')
 
 train(epochs, inputs, target, optimizer, loss_fn)
+torch.save(model.state_dict, "wine_model.pth")
+
+with torch.no_grad(): # we don't need gradients in the testing phase
+    predicted = model(torch.Tensor(torch.from_numpy(x))).data.numpy()
+    print("Predicted value")
+    print(predicted)

@@ -47,11 +47,9 @@ model = Model()
 loss_fn = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
-epochs = 1000
-
-
 def train(dataloader, model, loss_fn, optimizer):
     model.train()
+    epoch = 0
     for batch_size, (x, y) in enumerate(dataloader):
         pred = model(x)
         loss = loss_fn(pred, y)
@@ -59,7 +57,20 @@ def train(dataloader, model, loss_fn, optimizer):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        print(f"Loss: {loss.item()}")
+        print(f"Epoch: {epoch}, Loss: {loss.item()}")
+        epoch += 1
 
 
 train(train_dataloader, model, loss_fn, optimizer)
+
+pred = []
+with torch.no_grad():
+  for images,labels in test_dataloader:
+    images = images.reshape(-1,784)
+    output = model(images)
+    _,prediction = torch.max(output,1)
+    pred.append(prediction)
+
+    print(f"Actual\n{labels}")
+    print(f"Predicted\n{prediction}")
+
