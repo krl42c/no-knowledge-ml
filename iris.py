@@ -2,7 +2,6 @@ from sklearn import datasets
 import torch
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 
-
 iris = datasets.load_iris()
 
 x_data = iris.data
