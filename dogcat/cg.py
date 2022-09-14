@@ -80,54 +80,32 @@ dataloader = torch.utils.data.DataLoader(dataset, batch_size=32, collate_fn=lamb
     x_.to(device) for x_ in default_collate(x)), shuffle=True)
 print("OKOKOK")
 labels = {
-    "cat",
-    "dog"
+    0: "cat",
+    1: "dog"
 }
 
 images, labels = next(iter(dataloader))
 
 # plt.show()
 
-
-class Net(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.conv1 = torch.nn.Conv2d(3, 6, 5)
-        self.pool = torch.nn.MaxPool2d(2, 2)
-        self.conv2 = torch.nn.Conv2d(6, 16, 5)
-        self.fc1 = torch.nn.Linear(16 * 5 * 5, 120)
-        self.fc2 = torch.nn.Linear(120, 84)
-        self.fc3 = torch.nn.Linear(84, 10)
-
-    def forward(self, x):
-        x = self.pool(torch.nn.functional.relu(self.conv1(x)))
-        x = self.pool(torch.nn.functional.relu(self.conv2(x)))
-        x = torch.flatten(x, 1)  # flatten all dimensions except batch
-        return x
-
-
-class ModelTest(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.conv1 = torch.nn.Conv2d(3, 6, 5)
-
-    def forward(self, x):
-        x = self.conv1(x)
-        return x
-
-
 dataiter = iter(dataloader)
 images, labels = dataiter.next()
-model = Net()
 
-model_resnet = models.resnet18(pretrained=True)
+model_resnet = models.densenet121(pretrained=True)
+model_resnet.classifier = torch.nn.Sequential(torch.nn.Linear(1024, 512),
+                                              torch.nn.ReLU(),
+                                              torch.nn.Dropout(0.2),
+                                              torch.nn.Linear(512, 256),
+                                              torch.nn.ReLU(),
+                                              torch.nn.Dropout(0.1),
+                                              torch.nn.Linear(256, 2),
+                                              torch.nn.LogSoftmax(dim=1))
+
 model_resnet.to(device)
-
-loss_fn = torch.nn.CrossEntropyLoss()
+loss_fn = torch.nn.NLLLoss()
 optimizer = torch.optim.Adam(model_resnet.parameters(), lr=0.001)
 
-
-for epoch in range(50):
+for epoch in range(2):
     for i, data in enumerate(dataloader, 0):
         inputs, labels = data
         inputs.to(device)
@@ -139,3 +117,5 @@ for epoch in range(50):
         loss.backward()
         optimizer.step()
         print(f"Current loss {loss.item()}")
+
+torch.save(model_resnet, "models/classifier.pt")
