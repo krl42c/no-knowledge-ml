@@ -71,6 +71,7 @@ def copy_files():
         i = i + 1
 
 
+
 transform = transforms.Compose([transforms.Resize(255),
                                 transforms.CenterCrop(224),
                                 transforms.ToTensor()])
@@ -86,8 +87,6 @@ labels = {
 
 images, labels = next(iter(dataloader))
 
-# plt.show()
-
 dataiter = iter(dataloader)
 images, labels = dataiter.next()
 
@@ -102,9 +101,8 @@ model_resnet.classifier = torch.nn.Sequential(torch.nn.Linear(1024, 512),
                                               torch.nn.LogSoftmax(dim=1))
 
 model_resnet.to(device)
-loss_fn = torch.nn.NLLLoss()
+loss_fn = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model_resnet.parameters(), lr=0.001)
-
 for epoch in range(2):
     for i, data in enumerate(dataloader, 0):
         inputs, labels = data
