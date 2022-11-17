@@ -18,28 +18,8 @@ from PIL import ImageDraw
 
 device = torch.device("mps")
 
-transform = transforms.Compose([transforms.Resize(255),
-                                transforms.CenterCrop(224),
-                                transforms.ToTensor()])
-
-dataset = datasets.ImageFolder("data/train/", transform=transform)
-dataloader = torch.utils.data.DataLoader(dataset, batch_size=32, collate_fn=lambda x: tuple(
-    x_.to(device) for x_ in default_collate(x)), shuffle=True)
-
-
-model = torch.load("models/classifier.pt")
+model = torch.load("models/classifier2.pt")
 model.eval()
-
-pred = []
-with torch.no_grad():
-    for images, labels in dataloader:
-        output = model(images)
-        _, prediction = torch.max(output, 1)
-        pred.append(prediction)
-
-        print(f"Actual\n{labels}")
-        print(f"Predicted\n{prediction}")
-
 
 def predict(filepath):
     img_array = Image.open(filepath).convert("RGB")
@@ -59,16 +39,15 @@ def predict(filepath):
         print(preds[0])
         print(f"class : {preds[0]}")
         if preds[0] == 1:
-            print(f"predicted ----> Dog")
-            img_class = "DOG predicted"
+            img_class = "Dog"
         else:
-            print(f"predicted ----> Cat")
-            img_class = "CAT predicted"
+            img_class = "Cat"
+        print(img_class)
     img = mpimg.imread(filepath)
     imgplot = plt.imshow(img)
     plt.rc('font', size=30)          # controls default text sizes
 
-    plt.text(200, 150, img_class)
+    plt.text(0, 150, img_class)
     plt.show()
 
 # predict("data/train/dog/dog12.jpg")
@@ -76,13 +55,16 @@ def predict(filepath):
 dog_samples = random.sample(range(1,49), 5)
 cat_samples = random.sample(range(1,49), 5)
 
-dog_folder = "data/train/dog/"
-cat_folder = "data/train/cat/"
+data_path = "data/validation/"
 
-for x in dog_samples:
-    file = dog_folder + "dog" + str(x) + ".jpg"
-    predict(file)
+from os import listdir
+from os.path import isfile, join
 
-for x in cat_samples:
-    file = cat_folder + "cat" + str(x) + ".jpg"
-    predict(file)
+files = [f for f in listdir(data_path) if isfile(join(data_path, f)) and f.endswith(".jpg")] 
+random.shuffle(files)
+"""
+for f in files:
+    predict(data_path + f)
+"""
+
+predict("kitty.png")
